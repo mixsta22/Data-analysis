@@ -1,0 +1,121 @@
+![Global Internet Banner](banner_image.png)
+
+# Internet: A Global Phenomenon
+
+This dataset contains information on internet access around the world.
+
+The workspace is set up with two CSV files containing information on global internet access for years ranging from 1990 to 2020.
+
+- `internet_users.csv`
+    - `users` - The number of people who have used the internet in the last three months
+    - `share` - The share of the entity's population who have used the internet in the last three months
+- `adoption.csv`
+    - `fixed_telephone_subs` - The number of people who have a telephone landline connection
+    - `fixed_telephone_subs_share` - The share of the entity's population who have a telephone landline connection
+    - `fixed_broadband_subs` - The number of people who have a broadband internet landline connection
+    - `fixed_broadband_subs_share` - The share of the entity's population who have a broadband internet landline connection
+    - `mobile_cell_subs` - The number of people who have a mobile subscription
+    - `mobile_cell_subs_share` - The share of the entity's population who have a mobile subscription
+
+Both data files are indexed on the following 3 attributes:
+
+- `entity` - The name of the country, region, or group.
+- `code` - Unique id for the country (null for other entities).
+- `year` - Year from 1990 to 2020.
+
+Check out the guiding questions or the scenario described below to get started with this dataset!
+Feel free to make this workspace yours by adding and removing cells, or editing any of the existing cells.
+
+Source: [Our World In Data](https://ourworldindata.org/internet)
+### 🌎 **Some guiding questions to help you explore this data:**
+
+1. What are the top 5 countries with the highest internet use (by population share)?
+2. What are the top 5 countries with the highest internet use for some large regions?
+3. What is the correlation between internet usage (population share) and broadband subscriptions for 2020?
+
+_Note:  [This](https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups) is how the World Bank defines the different regions._
+### 📊 **Visualization ideas**
+- Line chart: Display internet usage over time of the top 5 countries.
+- Map: Vividly illustrate the internet usage around the world in a certain year on a map. Leveraging, for example, [GeoPandas](https://geopandas.org/en/stable/index.html) or [Folium](https://python-visualization.github.io/folium/latest/).
+### 🔍 **Scenario: Identify emerging markets for a global internet provider**
+
+This scenario helps you develop an end-to-end project for your portfolio.
+
+Background: You work for a global internet provider on a mission to provide affordable Internet access to everybody around the world using satellites. You are tasked with identifying which markets (regions or countries) are most worthwhile to focus efforts on.
+
+**Objective**: Construct a top 5 list of countries where there is a big opportunity to roll out our services. Try to consider the amount of people not having access to (good) wired or mobile internet and their spending power.
+You can query the pre-loaded CSV files using SQL directly. Here’s a **sample query**:
+SELECT *
+FROM 'internet_users.csv'
+LIMIT 10
+import os
+import pandas as pd
+
+internet_users = pd.read_csv('internet_users.csv')
+internet_users.head()
+adoption = pd.read_csv('adoption.csv')
+adoption.head()
+# What are the top 5 countries with the highest internet use (by population share)?
+top_5_countries = internet_users.groupby('entity')['share'].sum()
+top_5_countries.nlargest(5)
+What are the **top 5 countries** with the **highest internet** use for some large regions?
+!pip install pycountry
+import pycountry
+import pandas as pd
+
+# # Create a list of valid country names
+# valid_countries = [country.name for country in pycountry.countries]
+
+# # Filter entities that are valid countries
+# internet_users_only_countries = internet_users[internet_users['entity'].isin(valid_countries)]
+
+# Define column names
+columns = ['entity', 'sum of internet users']
+
+top_5_users = internet_users_only_countries.groupby('entity')['users'].sum()
+top_5_users = pd.DataFrame(data=top_5_users).reset_index()
+top_5_users.columns = columns
+# top_5_users['sum of internet users'] = top_5_users['sum of internet users'].apply(lambda x: f"{int(x/10000)}K")
+
+top_users = top_5_users.sort_values(by='sum of internet users', ascending=False).reset_index(drop = True)
+top_5_users = top_5_users.sort_values(by='sum of internet users', ascending=False).reset_index(drop = True).head(5)
+top_5_users
+What is the correlation between internet usage (population share) and broadband subscriptions for 2020?
+So i need to check the correlation between the columns `internet_users.shares` and `adoption.fixed_broadband_subs` in 2020 by country
+import pandas as pd
+
+# Create a list of valid country names
+valid_countries = [country.name for country in pycountry.countries]
+
+# Filter entities that are valid countries
+adoption_2020_by_country = adoption[adoption['entity'].isin(valid_countries)]
+
+adoption_2020_by_country = adoption_2020_by_country[adoption_2020_by_country['year'] == 2020].groupby('entity')['fixed_broadband_subs'].sum().reset_index()
+adoption_2020_by_country = adoption_2020_by_country.sort_values(by='fixed_broadband_subs', ascending=False).reset_index(drop=True)
+
+columns = ['entity', 'fixed_broadband_subs']
+adoption_2020_by_country.columns = columns
+
+# Sort the values by fixed broadband subs
+adoption_2020_by_country = adoption_2020_by_country.sort_values(by='fixed_broadband_subs', ascending=False).reset_index(drop=True)[1:6]
+
+adoption_2020_by_country
+We are going to plot the above results in order to see their correlation 
+import matplotlib_inline
+import matplotlib.pyplot as plt
+
+# Create a figure and axis
+fig, ax = plt.subplots()
+
+# Plot 'top_5_users' data
+top_5_users.plot(x='entity', y='sum of internet users', label='top 5 countries by internet users', ax=ax,logy=True)
+
+# Plot 'adoption_2020_by_country' data and set the ylabel
+adoption_2020_by_country.plot(x='entity', y='fixed_broadband_subs', ax=ax, ylabel='adoption & fixed broadband subs - log',logy=True)
+
+# Rotate x-axis labels by 90 degrees
+plt.xticks(rotation=45)
+
+# Show the plot
+plt.show()
+
